@@ -1,142 +1,407 @@
 <!doctype html>
 <html lang="ko">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>초6 뼈·근육 지식봇</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>초6 뼈·근육 지식봇</title>
+  <style>
+    :root { --bg:#0b1020; --card:#111a33; --line:#233056; --txt:#e9eefc; --sub:#b9c4ea; }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--txt);}
+    .wrap{max-width:920px;margin:0 auto;padding:16px;}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+    .topbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+      padding:12px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.02);}
+    .pill{font-size:12px;color:var(--sub);border:1px solid var(--line);padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.02);}
+    .namebox{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .namebox input{width:140px;padding:10px 10px;border-radius:12px;border:1px solid var(--line);background:#0e1630;color:var(--txt);outline:none;}
+    .namebox button,.bar button{padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(122,162,255,.18);color:var(--txt);cursor:pointer;font-weight:800;}
+    .namebox button:hover,.bar button:hover{background:rgba(122,162,255,.28);}
 
-<style>
-:root { --bg:#0b1020; --card:#111a33; --line:#233056; --txt:#e9eefc; --sub:#b9c4ea; }
-body{margin:0;font-family:system-ui;background:var(--bg);color:var(--txt);}
-.wrap{max-width:900px;margin:auto;padding:16px;}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+    .msgs{height:60vh;min-height:380px;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+    .msg{max-width:82%;padding:10px 12px;border-radius:14px;border:1px solid var(--line);line-height:1.5;white-space:pre-wrap;}
+    .bot{background:rgba(122,162,255,.08);align-self:flex-start;}
+    .me{background:rgba(255,255,255,.06);align-self:flex-end;}
 
-.top{padding:10px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
-.pill{border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:12px;color:var(--sub)}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:rgba(255,255,255,.02);}
+    .chip{font-size:12px;color:var(--sub);border:1px solid var(--line);padding:7px 10px;border-radius:999px;cursor:pointer;user-select:none;}
+    .chip:hover{color:var(--txt);border-color:rgba(122,162,255,.6);}
 
-.msgs{height:60vh;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:80%;padding:10px;border-radius:12px;border:1px solid var(--line);white-space:pre-wrap}
-.bot{background:#1b2650}
-.me{background:#0f183a;align-self:flex-end}
+    .bar{display:flex;gap:10px;padding:12px;border-top:1px solid var(--line);}
+    .bar input{flex:1;padding:12px 12px;border-radius:12px;border:1px solid var(--line);background:#0e1630;color:var(--txt);outline:none;}
 
-.bar{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
-input{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0f183a;color:white}
-button{padding:10px;border-radius:10px;border:1px solid var(--line);background:#2a3a7a;color:white;cursor:pointer}
+    .searchBtn{margin-top:8px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(122,162,255,.25);color:var(--txt);cursor:pointer;font-weight:900;width:fit-content;}
+    .searchBtn:hover{background:rgba(122,162,255,.35);}
 
-.searchBtn{margin-top:8px;background:#425cff}
-</style>
+    .small{font-size:12px;color:var(--sub);margin-top:10px;line-height:1.5;}
+    code.k{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:8px;border:1px solid var(--line);}
+  </style>
 </head>
 <body>
 <div class="wrap">
-<div class="card">
+  <div class="card">
+    <div class="topbar">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <div id="status" class="pill">이름: - | 칭호: 입문자 | 질문 0개</div>
+        <div class="pill">겹치지 않는 질문만 카운트!</div>
+      </div>
+      <div class="namebox">
+        <input id="nameInput" placeholder="이름 입력" />
+        <button id="setNameBtn">이름 설정</button>
+        <button id="resetBtn" title="현재 이름 기록 초기화">초기화</button>
+      </div>
+    </div>
 
-<div class="top">
-<div id="status" class="pill">이름: - | 칭호: 입문자 | 질문 0개</div>
-<input id="name" placeholder="이름 입력" style="width:120px">
-<button onclick="setName()">설정</button>
-<button onclick="resetUser()">초기화</button>
-</div>
+    <div id="msgs" class="msgs"></div>
 
-<div id="msgs" class="msgs"></div>
+    <div class="chips" id="chips"></div>
 
-<div class="bar">
-<input id="q" placeholder="질문 입력">
-<button onclick="ask()">질문</button>
-</div>
+    <div class="bar">
+      <input id="q" placeholder="예) 팔이 왜 굽혀져? / 가장 큰 뼈 뭐야? / 근육 왜 떨려?" autocomplete="off" />
+      <button id="askBtn">질문</button>
+    </div>
+  </div>
 
-</div>
+  <div class="small">
+    • 이 버전은 “키워드/동의어 매칭”이라서 말이 조금 달라도 알아듣게 설계했어.<br/>
+    • 기록은 이 기기(브라우저)에 저장돼. 다른 기기에서는 따로 저장돼.
+  </div>
 </div>
 
 <script>
-/* ---------- 칭호 ---------- */
-const titles=[
-{n:1,t:"탐험가"},
-{n:3,t:"뼈 견습생"},
-{n:5,t:"근육 연구원"},
-{n:8,t:"관절 전문가"},
-{n:12,t:"인체 박사"},
-{n:20,t:"해부학 마스터"}
+/* =========================
+   0) 저장키 / 칭호
+========================= */
+const STORE_KEY="bbot_records_final_c1";
+const NAME_KEY ="bbot_current_name_final_c1";
+
+const TITLES=[
+  {n:1,t:"탐험가"},{n:3,t:"뼈 견습생"},{n:5,t:"근육 연구원"},
+  {n:8,t:"관절 전문가"},{n:12,t:"인체 박사"},{n:20,t:"해부학 마스터"}
 ];
 
-let users=JSON.parse(localStorage.getItem("bbotUsers")||"{}");
-let current=localStorage.getItem("bbotName")||"";
+const $=s=>document.querySelector(s);
+const msgsEl=$("#msgs"), qEl=$("#q"), statusEl=$("#status"), nameInput=$("#nameInput");
 
-function save(){localStorage.setItem("bbotUsers",JSON.stringify(users))}
-function saveName(){localStorage.setItem("bbotName",current)}
-
-function update(){
-let u=users[current]||{asked:[]};
-let title="입문자";
-for(let i of titles){if(u.asked.length>=i.n)title=i.t}
-document.getElementById("status").textContent=`이름: ${current||"-"} | 칭호: ${title} | 질문 ${u.asked.length}개`;
+/* =========================
+   1) 유틸
+========================= */
+function addMsg(text,who="bot"){
+  const div=document.createElement("div");
+  div.className=`msg ${who}`;
+  div.textContent=text;
+  msgsEl.appendChild(div);
+  msgsEl.scrollTop=msgsEl.scrollHeight;
 }
-update();
-
-/* ---------- 채팅 ---------- */
-const msgs=document.getElementById("msgs");
-function add(t,w="bot"){let d=document.createElement("div");d.className="msg "+w;d.textContent=t;msgs.appendChild(d);msgs.scrollTop=999999}
-
-/* ---------- 구글 버튼 ---------- */
-function searchBtn(q){
-let box=document.createElement("div");box.className="msg bot";
-let t=document.createElement("div");
-t.textContent="이건 아직 모르는 내용이야 🔎 구글에서 찾아보고 다시 돌아오세요!";
-let b=document.createElement("button");
-b.className="searchBtn";
-b.textContent="구글에서 찾아보기";
-b.onclick=()=>window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank");
-box.appendChild(t);box.appendChild(b);
-msgs.appendChild(box);
+function normalize(s){
+  return (s||"")
+    .toLowerCase()
+    .replace(/\s+/g," ")
+    .replace(/[?!.,"'’“”()]/g,"")
+    .trim();
 }
 
-/* ---------- 지식 ---------- */
-const KB={
-"가장 큰 뼈":"허벅지 뼈 대퇴골이야. 몸무게를 버티기 때문에 가장 길고 튼튼해.",
-"뼈 몇 개":"어른은 206개야. 아기는 더 많았다가 자라며 붙어 줄어들어.",
-"갈비뼈":"12쌍 24개야. 심장과 폐를 보호해.",
-"손가락 뼈":"한 손 14개야. 엄지는 2개 나머지는 3개씩이야.",
-"근육 움직여":"근육은 수축하면 짧아지고 이완하면 길어져 뼈를 당겨 움직여.",
-"팔 굽힐":"이두근 수축 삼두근 이완이야.",
-"근육 떨려":"빠르게 수축과 이완이 반복되면 떨려 보여."
-};
+/* =========================
+   2) 구글 버튼(모르는 질문)
+========================= */
+function addSearchButton(query){
+  const box=document.createElement("div");
+  box.className="msg bot";
 
-/* ---------- 이름 ---------- */
-function setName(){
-current=document.getElementById("name").value.trim();
-if(!current)return add("이름을 입력해줘!");
-if(!users[current])users[current]={asked:[]};
-save();saveName();update();
-add(current+" 시작!");
+  const txt=document.createElement("div");
+  txt.textContent="이건 아직 데이터에 없는 질문이야! 🔎 구글에서 찾아보고, 답을 확인한 다음 다시 돌아오세요 🙂";
+
+  const btn=document.createElement("button");
+  btn.className="searchBtn";
+  btn.textContent="구글에서 찾아보기";
+  btn.onclick=()=>window.open("https://www.google.com/search?q="+encodeURIComponent(query),"_blank");
+
+  box.appendChild(txt); box.appendChild(btn);
+  msgsEl.appendChild(box);
+  msgsEl.scrollTop=msgsEl.scrollHeight;
 }
 
-function resetUser(){
-if(!current)return;
-users[current]={asked:[]};
-save();update();
-add("기록 초기화!");
+/* =========================
+   3) 이름별 저장
+========================= */
+function loadAll(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)||"{}"); }catch{ return {}; }
+}
+function saveAll(all){ localStorage.setItem(STORE_KEY, JSON.stringify(all)); }
+function getCurrentName(){ return (localStorage.getItem(NAME_KEY)||"").trim(); }
+function setCurrentName(n){ localStorage.setItem(NAME_KEY,n); }
+
+function ensureUser(all,name){
+  if(!all[name]) all[name]={ askedNorm:[], askedRaw:[] };
+  return all[name];
+}
+function getTitle(count){
+  let title="입문자";
+  for(const t of TITLES) if(count>=t.n) title=t.t;
+  return title;
+}
+function updateStatus(){
+  const all=loadAll();
+  const name=getCurrentName()||"-";
+  const u=(name!=="-")?ensureUser(all,name):{askedNorm:[]};
+  const count=u.askedNorm.length;
+  statusEl.textContent=`이름: ${name} | 칭호: ${getTitle(count)} | 질문 ${count}개`;
 }
 
-/* ---------- 질문 ---------- */
-function ask(){
-let q=document.getElementById("q").value.trim();
-if(!q)return;
-add(q,"me");
+/* =========================
+   4) 지식베이스(키워드/동의어 매칭)
+   - keys: 학생들이 쓸 법한 표현 묶음
+   - a: 3~5문장, 교과 수준, 수축/이완 허용
+========================= */
+const KB = [
+  {
+    keys:["가장 큰 뼈","큰 뼈","제일 큰 뼈","대퇴골","허벅지 뼈"],
+    a:`가장 큰 뼈는 허벅지 뼈인 대퇴골이야.
+몸무게를 버티고 걸을 때 큰 힘을 받아서 길고 튼튼해.`
+  },
+  {
+    keys:["가장 작은 뼈","제일 작은 뼈","작은 뼈","등자뼈","귀 뼈","귀 안 뼈"],
+    a:`가장 작은 뼈는 귀 안에 있는 등자뼈야.
+쌀알보다 작고 소리의 진동을 전달해.`
+  },
+  {
+    keys:["뼈 몇 개","뼈 개수","뼈는 몇개","사람 뼈 몇","성인 뼈 몇","206"],
+    a:`어른은 뼈가 206개야.
+아기는 뼈가 따로따로 시작해서 자라면서 서로 붙기도 해서 개수가 줄어들어.`
+  },
+  {
+    keys:["갈비뼈","갈비 뼈","rib","24개","12쌍"],
+    a:`갈비뼈는 12쌍, 총 24개야.
+심장과 폐를 보호하고, 숨 쉴 때 가슴이 움직이게 도와줘.`
+  },
+  {
+    keys:["척추","등뼈","척추뼈","척추 몇","26개"],
+    a:`어른의 척추뼈는 26개야.
+몸을 세우고 몸통을 구부리거나 비틀 수 있게 해.`
+  },
+  {
+    keys:["손가락 뼈","손가락뼈","손가락 몇개","손가락 14","한 손 14"],
+    a:`한 손의 손가락뼈는 14개야.
+엄지는 2개, 나머지 네 손가락은 3개씩이야.`
+  },
+  {
+    keys:["발가락 뼈","발가락뼈","발가락 몇개","발가락 14","한 발 14"],
+    a:`한 발의 발가락뼈는 14개야.
+엄지발가락은 2개, 나머지는 3개씩이야.`
+  },
+  {
+    keys:["뼈 왜 딱딱","뼈가 딱딱","뼈는 왜 단단","칼슘"],
+    a:`뼈는 몸을 버티는 기둥이라 단단해야 해.
+뼈에는 칼슘 같은 성분이 많아서 딱딱해져.`
+  },
+  {
+    keys:["관절","무릎 관절","팔꿈치 관절","관절이 뭐","왜 잘 구부러"],
+    a:`관절은 뼈와 뼈가 만나는 자리야.
+관절이 있어서 팔꿈치나 무릎처럼 잘 구부릴 수 있어.
+뼈 끝에는 연골이 있어 부드럽게 움직이게 도와줘.`
+  },
+  {
+    keys:["연골","연골이 뭐","연골 역할","쿠션"],
+    a:`연골은 뼈 끝에 있는 말랑한 쿠션 같은 부분이야.
+관절에서 충격을 줄이고 뼈끼리 부드럽게 움직이게 해.`
+  },
+  {
+    keys:["근육 어떻게","근육 움직","수축","이완","근육은 어떻게 움직"],
+    a:`근육은 수축하면 짧아지고, 이완하면 길어져.
+근육이 수축하면서 뼈를 잡아당겨서 몸이 움직여.`
+  },
+  {
+    keys:["근육 몇 개","근육 개수","600개","근육은 몇개"],
+    a:`사람 몸에는 근육이 600개 이상 있어.
+걷기, 표정, 자세 유지, 숨 쉬기까지 근육이 해.`
+  },
+  {
+    keys:["근육 왜 짝","근육 두 개","짝으로","굽히는 근육","펴는 근육"],
+    a:`근육은 당기기는 잘하지만 밀기는 못해.
+그래서 굽히는 근육과 펴는 근육이 짝을 이뤄 번갈아 수축·이완해.`
+  },
+  {
+    keys:["팔 굽","팔 접","팔 왜 접","팔이 왜 굽","팔을 굽히면","이두","삼두"],
+    a:`팔을 굽힐 때는 이두근이 수축하고 삼두근이 이완해.
+그래서 아래팔이 위로 올라와.
+팔을 펼 때는 반대로 삼두근이 수축하고 이두근이 이완해.`
+  },
+  {
+    keys:["힘줄","힘줄 뭐","근육 뼈 붙","근육이 뼈에","줄 같은"],
+    a:`근육은 힘줄로 뼈와 이어져 있어.
+근육이 수축하면 힘줄이 당겨지고, 뼈가 움직여.`
+  },
+  {
+    keys:["근육 왜 떨","파르르","덜덜","떨리는","떨려"],
+    a:`근육이 아주 빠르게 수축과 이완을 반복하면 떨리는 것처럼 보여.
+힘을 오래 주거나 피곤할 때 근육이 잠깐 쉬지 못해서 나타날 수 있어.`
+  },
+  {
+    keys:["뼈가 없으면","뼈 없으면","뼈가 없","골격 없"],
+    a:`뼈가 없으면 몸을 지탱하기 어려워서 형태를 유지하기 힘들어.
+또 뇌나 심장 같은 중요한 기관도 보호받기 어려워.`
+  },
+  {
+    keys:["근육이 없으면","근육 없으면","근육이 없","움직일 수 없"],
+    a:`근육이 없으면 몸을 움직일 수 없어.
+심장이나 장처럼 자동으로 움직이는 근육도 있어서 생명 유지도 어려워져.`
+  },
+  {
+    keys:["숨 쉬","호흡","숨쉬는","숨도 근육"],
+    a:`숨 쉬는 것도 근육이 해.
+가슴과 배 쪽 근육이 수축·이완하면서 공기가 들어가고 나가.`
+  },
+  {
+    keys:["심장 근육","심장도 근육","심장은 근육"],
+    a:`심장도 근육으로 이루어져 있어.
+심장 근육이 수축과 이완을 반복해서 피를 온몸으로 보내.`
+  },
+];
 
-if(!current){add("먼저 이름 입력!");return}
+/* 추천 질문 칩 */
+const SUGGEST=[
+  "가장 큰 뼈는 뭐야?",
+  "갈비뼈는 몇 개야?",
+  "손가락 뼈는 몇 개야?",
+  "근육은 어떻게 움직여?",
+  "팔이 왜 굽혀져?",
+  "왜 근육이 파르르 떨려?",
+  "관절이 뭐야?"
+];
 
-let u=users[current];
-if(!u.asked.includes(q)){u.asked.push(q);save();update()}
-
-let found=false;
-for(let k in KB){
-if(q.includes(k)){add(KB[k]);found=true;break}
+/* =========================
+   5) 매칭 엔진: 키워드 점수제
+   - 질문에 포함된 key 개수(길이 가중)로 최고점 선택
+========================= */
+function scoreMatch(qNorm, key){
+  key = normalize(key);
+  if(!key) return 0;
+  // 포함되면 점수: 길이 비례(짧은 키워드는 점수 낮게)
+  if(qNorm.includes(key)){
+    return Math.max(1, Math.min(8, Math.floor(key.length/2)));
+  }
+  return 0;
 }
-if(!found)searchBtn(q);
 
-document.getElementById("q").value="";
+function getAnswer(userQ){
+  const qNorm = normalize(userQ);
+
+  let best = {score:0, a:""};
+  for(const item of KB){
+    let s=0;
+    for(const k of item.keys){
+      s += scoreMatch(qNorm, k);
+    }
+    if(s > best.score){
+      best = {score:s, a:item.a};
+    }
+  }
+
+  // 임계값: 너무 약하면 모르는 질문 처리
+  // (대충 2~3단어 정도 맞아야 통과)
+  if(best.score < 3) return null;
+  return best.a;
 }
 
-add("안녕! 이름 입력 후 질문해줘 🙂");
+/* =========================
+   6) 질문 카운트(겹치지 않는 질문만)
+========================= */
+function tryCountUnique(rawQ){
+  const name=getCurrentName();
+  if(!name){
+    addMsg("먼저 오른쪽 위에 이름을 적고 ‘이름 설정’을 눌러줘 🙂","bot");
+    return;
+  }
+  const qn=normalize(rawQ);
+  if(!qn) return;
+
+  const all=loadAll();
+  const u=ensureUser(all,name);
+
+  if(u.askedNorm.includes(qn)){
+    saveAll(all);
+    updateStatus();
+    return;
+  }
+
+  u.askedNorm.push(qn);
+  u.askedRaw.push(rawQ);
+  saveAll(all);
+  updateStatus();
+
+  const count=u.askedNorm.length;
+  const achieved=TITLES.find(t=>t.n===count);
+  if(achieved){
+    addMsg(`🎖️ 칭호 획득! "${achieved.t}" (겹치지 않는 질문 ${count}개)`, "bot");
+  }
+}
+
+/* =========================
+   7) UI
+========================= */
+function renderChips(){
+  const chipsEl=$("#chips");
+  chipsEl.innerHTML="";
+  for(const s of SUGGEST){
+    const c=document.createElement("div");
+    c.className="chip";
+    c.textContent=s;
+    c.onclick=()=>{ qEl.value=s; handleAsk(); };
+    chipsEl.appendChild(c);
+  }
+}
+
+function handleAsk(){
+  const text=qEl.value.trim();
+  if(!text) return;
+  addMsg(text,"me");
+
+  tryCountUnique(text);
+
+  const ans=getAnswer(text);
+  if(ans){
+    addMsg(ans,"bot");
+  }else{
+    addSearchButton(text);
+  }
+
+  qEl.value="";
+}
+
+$("#askBtn").addEventListener("click", handleAsk);
+qEl.addEventListener("keydown", (e)=>{ if(e.key==="Enter") handleAsk(); });
+
+$("#setNameBtn").addEventListener("click", ()=>{
+  const name=nameInput.value.trim();
+  if(!name){ addMsg("이름을 한 글자 이상 적어줘 🙂","bot"); return; }
+  setCurrentName(name);
+  const all=loadAll(); ensureUser(all,name); saveAll(all);
+  updateStatus();
+  addMsg(`좋아! 이제 "${name}" 이름으로 기록할게. 질문해줘 🙂`,"bot");
+});
+
+$("#resetBtn").addEventListener("click", ()=>{
+  const name=getCurrentName();
+  if(!name){ addMsg("초기화하려면 먼저 이름을 설정해줘!","bot"); return; }
+  const all=loadAll();
+  all[name]={askedNorm:[], askedRaw:[]};
+  saveAll(all); updateStatus();
+  addMsg(`"${name}"의 질문 기록을 초기화했어. 다시 시작!`,"bot");
+});
+
+/* 시작 */
+renderChips();
+updateStatus();
+
+const existing=getCurrentName();
+if(existing){
+  nameInput.value=existing;
+  addMsg(`다시 왔네! "${existing}" 기록으로 시작할게 🙂`,"bot");
+}else{
+  addMsg("안녕! 먼저 오른쪽 위에 이름을 적고 ‘이름 설정’을 눌러줘 🙂","bot");
+}
+addMsg("예) “팔이 왜 굽혀져?” “가장 큰 뼈 뭐야?” “근육 왜 떨려?”","bot");
 </script>
 </body>
 </html>
