@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>초6 뼈·근육 지식봇</title>
+
+<style>
+:root { --bg:#0b1020; --card:#111a33; --line:#233056; --txt:#e9eefc; --sub:#b9c4ea; }
+body{margin:0;font-family:system-ui;background:var(--bg);color:var(--txt);}
+.wrap{max-width:900px;margin:auto;padding:16px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;}
+
+.top{padding:10px;border-bottom:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap}
+.pill{border:1px solid var(--line);padding:6px 10px;border-radius:999px;font-size:12px;color:var(--sub)}
+
+.msgs{height:60vh;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:80%;padding:10px;border-radius:12px;border:1px solid var(--line);white-space:pre-wrap}
+.bot{background:#1b2650}
+.me{background:#0f183a;align-self:flex-end}
+
+.bar{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line)}
+input{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:#0f183a;color:white}
+button{padding:10px;border-radius:10px;border:1px solid var(--line);background:#2a3a7a;color:white;cursor:pointer}
+
+.searchBtn{margin-top:8px;background:#425cff}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="card">
+
+<div class="top">
+<div id="status" class="pill">이름: - | 칭호: 입문자 | 질문 0개</div>
+<input id="name" placeholder="이름 입력" style="width:120px">
+<button onclick="setName()">설정</button>
+<button onclick="resetUser()">초기화</button>
+</div>
+
+<div id="msgs" class="msgs"></div>
+
+<div class="bar">
+<input id="q" placeholder="질문 입력">
+<button onclick="ask()">질문</button>
+</div>
+
+</div>
+</div>
+
+<script>
+/* ---------- 칭호 ---------- */
+const titles=[
+{n:1,t:"탐험가"},
+{n:3,t:"뼈 견습생"},
+{n:5,t:"근육 연구원"},
+{n:8,t:"관절 전문가"},
+{n:12,t:"인체 박사"},
+{n:20,t:"해부학 마스터"}
+];
+
+let users=JSON.parse(localStorage.getItem("bbotUsers")||"{}");
+let current=localStorage.getItem("bbotName")||"";
+
+function save(){localStorage.setItem("bbotUsers",JSON.stringify(users))}
+function saveName(){localStorage.setItem("bbotName",current)}
+
+function update(){
+let u=users[current]||{asked:[]};
+let title="입문자";
+for(let i of titles){if(u.asked.length>=i.n)title=i.t}
+document.getElementById("status").textContent=`이름: ${current||"-"} | 칭호: ${title} | 질문 ${u.asked.length}개`;
+}
+update();
+
+/* ---------- 채팅 ---------- */
+const msgs=document.getElementById("msgs");
+function add(t,w="bot"){let d=document.createElement("div");d.className="msg "+w;d.textContent=t;msgs.appendChild(d);msgs.scrollTop=999999}
+
+/* ---------- 구글 버튼 ---------- */
+function searchBtn(q){
+let box=document.createElement("div");box.className="msg bot";
+let t=document.createElement("div");
+t.textContent="이건 아직 모르는 내용이야 🔎 구글에서 찾아보고 다시 돌아오세요!";
+let b=document.createElement("button");
+b.className="searchBtn";
+b.textContent="구글에서 찾아보기";
+b.onclick=()=>window.open("https://www.google.com/search?q="+encodeURIComponent(q),"_blank");
+box.appendChild(t);box.appendChild(b);
+msgs.appendChild(box);
+}
+
+/* ---------- 지식 ---------- */
+const KB={
+"가장 큰 뼈":"허벅지 뼈 대퇴골이야. 몸무게를 버티기 때문에 가장 길고 튼튼해.",
+"뼈 몇 개":"어른은 206개야. 아기는 더 많았다가 자라며 붙어 줄어들어.",
+"갈비뼈":"12쌍 24개야. 심장과 폐를 보호해.",
+"손가락 뼈":"한 손 14개야. 엄지는 2개 나머지는 3개씩이야.",
+"근육 움직여":"근육은 수축하면 짧아지고 이완하면 길어져 뼈를 당겨 움직여.",
+"팔 굽힐":"이두근 수축 삼두근 이완이야.",
+"근육 떨려":"빠르게 수축과 이완이 반복되면 떨려 보여."
+};
+
+/* ---------- 이름 ---------- */
+function setName(){
+current=document.getElementById("name").value.trim();
+if(!current)return add("이름을 입력해줘!");
+if(!users[current])users[current]={asked:[]};
+save();saveName();update();
+add(current+" 시작!");
+}
+
+function resetUser(){
+if(!current)return;
+users[current]={asked:[]};
+save();update();
+add("기록 초기화!");
+}
+
+/* ---------- 질문 ---------- */
+function ask(){
+let q=document.getElementById("q").value.trim();
+if(!q)return;
+add(q,"me");
+
+if(!current){add("먼저 이름 입력!");return}
+
+let u=users[current];
+if(!u.asked.includes(q)){u.asked.push(q);save();update()}
+
+let found=false;
+for(let k in KB){
+if(q.includes(k)){add(KB[k]);found=true;break}
+}
+if(!found)searchBtn(q);
+
+document.getElementById("q").value="";
+}
+
+add("안녕! 이름 입력 후 질문해줘 🙂");
+</script>
+</body>
+</html>
